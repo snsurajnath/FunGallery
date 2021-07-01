@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tool="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity"
+    >
+    <item
+        android:id="@+id/refresh"
+        android:title="Refresh"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_baseline_refresh_24"/>
+
+    <item
+        android:id="@+id/sort"
+        android:title="Sort Image"
+        tool:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/newer"
+                android:title="Newest first"/>
+            <item
+                android:id="@+id/older"
+                android:title="Oldest first"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/grid"
+        android:title="Grid type"
+        tool:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/two"
+                android:title="Two columns"/>
+            <item
+                android:id="@+id/three"
+                android:title="Three columns"/>
+            <item
+                android:id="@+id/four"
+                android:title="Four columns"/>
+            <item
+                android:id="@+id/five"
+                android:title="Five columns"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/Search"
+        android:title="Search"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/setting"
+        android:title="App in Settings"
+        app:showAsAction="never"/>
+
+</menu>
