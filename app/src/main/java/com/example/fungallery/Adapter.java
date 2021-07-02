@@ -102,44 +102,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
 //        builder1.setMessage("Do you want to delete image ?");
         builder.setCancelable(true);
 //
-//        builder.setPositiveButton("delete", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//
-//                //API < 29
-//                if (new File(image.getImageUri().getPath()).exists()){
-//                    Toast.makeText(context, "Exists", Toast.LENGTH_SHORT).show();
-//                    new File(image.getImageUri().getPath()).delete();
-//                    notifyItemRemoved(position);
-//                }
-//                else {
-//                    Toast.makeText(context, "Don't Exists", Toast.LENGTH_SHORT).show();
-//                }
-//
-//                // API >= 29
-//                Uri imageContentUri = getContentUriId(image.getImageUri(),
-//                        context, new File(image.getImageUri().getPath()).getName());
-//                pos = position;
-//                try {
-//                    delete((Activity) context,new Uri[]{imageContentUri},DELETE_REQUEST_CODE);
-//                } catch (IntentSender.SendIntentException e) {
-//                    e.printStackTrace();
-//                }
-//
-//            }
-//        });
-//        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                dialog.dismiss();
-//            }
-//        });
-//        builder.setNeutralButton("Dissmiss", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                dialog.dismiss();
-//            }
-//        });
+//      
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View dialoglayout = inflater.inflate(R.layout.image_preview, null);
         builder.setView(dialoglayout);
@@ -157,54 +120,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
             @Override
             public void onClick(View v) {
 
-                // API < 29
-//                File file = new File(image.getImageUri().getPath());
-//                if (file.exists()) {
-//                    context.getApplicationContext().deleteFile(String.valueOf(file));
-//                    Toast.makeText(context, "Exists", Toast.LENGTH_SHORT).show();
-//                    if (file.getAbsoluteFile().delete())
-//                        notifyItemRemoved(position);
-//                    alertDialog.dismiss();
-//                } else {
-//                    Toast.makeText(context, "Don't Exists", Toast.LENGTH_SHORT).show();
-//                }
-
-                //new
-//                context.getContentResolver().delete(image.getImageUri(), null, null);
-//                notifyItemRemoved(position);
-//                alertDialog.dismiss();
-
-                //API > 28
-
-//                try {
-//                    if (delete((Activity) context,new Uri[]{imageContentUri},DELETE_REQUEST_CODE))
-//                        notifyItemRemoved(position);
-//                    alertDialog.dismiss();
-//                } catch (IntentSender.SendIntentException e) {
-//                    e.printStackTrace();
-//                }
-
-
-
-//                try {
-//                    //API <= 28
-//                    delete1(imageContentUri, context);
-//                    notifyItemRemoved(position);
-//                    alertDialog.dismiss();
-//                }
-//                catch (Exception e){
-//                    try {
-//                        //API >= 28
-//                        if (delete((Activity) context,new Uri[]{imageContentUri},DELETE_REQUEST_CODE))
-//                            notifyItemRemoved(position);
-//                    } catch (IntentSender.SendIntentException sendIntentException) {
-//                        sendIntentException.printStackTrace();
-//                    }
-//                    alertDialog.dismiss();
-//                    Toast.makeText(context, e.getMessage(), Toast.LENGTH_SHORT).show();
-////
-//                }
-
+  
 //                 1st thing:
 //                 file uri --> content uri
 //                 /storage/emulated/0/Pictures/image_name.jpg // file uri
@@ -270,100 +186,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
         ContentResolver resolver = context.getContentResolver();
         return resolver.delete(uri, null, null);
     }
-
-
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        Log.d("MyAdapter", "onActivityResult");
-//        try {
-////                Uri uri = data.getData();
-//            Log.d("IMAGEID", data.getData().getPath());
-//            PendingIntent intent = MediaStore.createDeleteRequest(context.getContentResolver(), Collections.singleton(data.getData()));
-//            ((Activity) context).startIntentSenderForResult(intent.getIntentSender(), requestCode,
-//                    null, 0, 0, 0);
-//            notifyItemRemoved(pos);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//
-//    public static boolean delete(final Activity activity, final Uri[] uriList, final int requestCode)
-//            throws SecurityException, IntentSender.SendIntentException, IllegalArgumentException {
-//        final ContentResolver resolver = activity.getContentResolver();
-//
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//            final List<Uri> list = new ArrayList<>();
-//            Collections.addAll(list, uriList);
-//
-//            final PendingIntent pendingIntent = MediaStore.createDeleteRequest(resolver, list);
-//            activity.startIntentSenderForResult(pendingIntent.getIntentSender(), requestCode, null, 0, 0, 0, null);
-//
-//        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-//            try {
-//                for (final Uri uri : uriList) {
-//                    resolver.delete(uri, null, null);
-//                }
-//
-//            } catch (RecoverableSecurityException ex) {
-//                final IntentSender intent = ex.getUserAction()
-//                        .getActionIntent()
-//                        .getIntentSender();
-//
-//                activity.startIntentSenderForResult(intent, requestCode,
-//                        null, 0, 0, 0, null);
-//            }
-//        } else {
-//            for (final Uri uri : uriList) {
-//                resolver.delete(uri, null, null);
-//            }
-//            return true;
-//        }
-//        return false;
-//    }
-
-
-
-//    void showImage(Image image) {
-//
-//        dialog = new Dialog(context, R.style.DialogBox) {
-//            @Override
-//            public boolean dispatchTouchEvent(@NonNull MotionEvent ev) {
-////                dismiss();
-//                return true;
-//            }
-//        };
-//        dialog.setContentView(R.layout.image_preview);
-//        dialog.show();
-//
-////        dialog.setCanceledOnTouchOutside(true);
-//
-//        ImageView imageView = dialog.findViewById(R.id.imageView);
-//        imageView.setClickable(true);
-//        imageView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Toast.makeText(context, "Image Clicked", Toast.LENGTH_SHORT).show();
-//                Log.d("Image######", "onClick: ");
-//            }
-//        });
-////        TextView delete = dialog.findViewById(R.id.delete);
-////        delete.setClickable(true);
-//        Glide.with(dialog.getContext())
-//                .load(Uri.fromFile(new File(image.getImageUri().toString())))
-//                .error(R.drawable.ic_launcher_foreground)
-//                .into(imageView);
-////        delete.setOnClickListener(new View.OnClickListener() {
-////            @Override
-////            public void onClick(View v) {
-////                new File(image.getImageUri().getPath()).delete();
-////                Toast.makeText(context, "Image Deleted", Toast.LENGTH_SHORT).show();
-////            }
-////        });
-//        isImagePressed = true;
-//    }
-
-
+    
     @Override
     public int getItemCount() {
         return imageArrayList.size();
