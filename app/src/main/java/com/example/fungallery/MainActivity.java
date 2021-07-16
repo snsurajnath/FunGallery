@@ -1,5 +1,6 @@
 package com.example.fungallery;
 
+import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -18,11 +19,14 @@ import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -62,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
 
 
 import static android.Manifest.permission.CAMERA;
@@ -71,6 +76,7 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 100;
     private static final int TAKE_PHOTO = 101;
+    public static final int CREATE_IMAGE = 14;
     RecyclerView recyclerView;
     FloatingActionButton cameraButton;
     ArrayList<Image> imageArrayList;
@@ -271,27 +277,27 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+
     }
 
     private void openCameraApp() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+//            createImage();
+
             // Create the File where the photo should go
             File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-
-            }
+            //                photoFile = createImageFile();
+//            photoFile = new File(currentPhotoPath);
+//            Log.d("PHOTO_FILE", photoFile.toString());
             // Continue only if the File was successfully created
-            if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this,
-                        "com.example.android.fileprovider",
-                        photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, TAKE_PHOTO);
-            }
+//            if (photoFile != null) {
+//                scanFile(this, new File(currentPhotoPath), "image/*");
+            Uri photoURI = saveImage();
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            startActivityForResult(takePictureIntent, TAKE_PHOTO);
+//            }
 
         }
     }
@@ -302,38 +308,60 @@ public class MainActivity extends AppCompatActivity {
         Log.d("ResultActivity", "Result");
 
         if (requestCode == TAKE_PHOTO) {
-            int file_size = Integer.parseInt(String.valueOf(new File(currentPhotoPath).length() / 1024));
-            if (file_size == 0)
-                new File(currentPhotoPath).delete();
+            AssetFileDescriptor fileDescriptor = null;
+            long fileSize = 0;
+            try {
+                fileDescriptor = getApplicationContext().getContentResolver().openAssetFileDescriptor(Uri.parse(currentPhotoPath), "r");
+                fileSize = fileDescriptor.getLength();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            if (fileSize == 0) {
+////                new File(currentPhotoPath).delete();
+                try {
+                    deleteCacheImage(Uri.parse(currentPhotoPath));
+                } catch (IntentSender.SendIntentException e) {
+                    e.printStackTrace();
+                }
+
+            }
             if (resultCode == Activity.RESULT_OK) {
                 layOut();
+                Log.d("SIZE_FILE", String.valueOf(fileSize));
+                if (fileSize != 0) {
+                    Toast.makeText(this, "Image captured", Toast.LENGTH_SHORT).show();
+                    File imgFile = new File(currentPhotoPath);
+                    dialog = new Dialog(MainActivity.this, R.style.DialogBox) {
+                        public boolean dispatchTouchEvent(MotionEvent event) {
+                            dialog.dismiss();
+                            return false;
+                        }
+                    };
+                    dialog.setContentView(R.layout.image_preview);
 
-                Toast.makeText(this, "Image captured", Toast.LENGTH_SHORT).show();
-                File imgFile = new File(currentPhotoPath);
-                dialog = new Dialog(MainActivity.this, R.style.DialogBox) {
-                    public boolean dispatchTouchEvent(MotionEvent event) {
-                        dialog.dismiss();
-                        return false;
-                    }
-                };
-                dialog.setContentView(R.layout.image_preview);
+                    imageView = dialog.findViewById(R.id.imageView);
+                    Glide.with(dialog.getContext())
+                            .load(Uri.parse(currentPhotoPath))
+                            .error(R.drawable.ic_launcher_foreground)
+                            .into(imageView);
+                    dialog.show();
 
-                imageView = dialog.findViewById(R.id.imageView);
-                Glide.with(dialog.getContext())
-                        .load(Uri.fromFile(imgFile))
-                        .error(R.drawable.ic_launcher_foreground)
-                        .into(imageView);
-                dialog.show();
-                galleryAddPicNotify(imgFile);
+                    galleryAddPicNotify(imgFile);
+                }
             }
         }
 
-        if (requestCode == adapter.DELETE_REQUEST_CODE){
-            if (resultCode != 0){
+        if (requestCode == adapter.DELETE_REQUEST_CODE) {
+            if (resultCode != 0) {
                 adapter.notifyItemRemoved(adapter.getPos());
             }
         }
 
+
+        if (requestCode == CREATE_IMAGE) {
+            Toast.makeText(this, "Image saved", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
@@ -342,10 +370,18 @@ public class MainActivity extends AppCompatActivity {
         // Create an Image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFilename = String.valueOf(System.currentTimeMillis());
-//        File storageDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+//        File storageDirectory = getExternalFilesDir("FunApp");
+        File volNames = getExternalFilesDir(null);
+        Log.d("VOL_NAMES_", volNames.getAbsolutePath());
+        String[] name = volNames.getAbsolutePath().split("/");
+        String path = "/" + name[1] + "/" + name[2] + "/" + name[3] + "/Pictures";
+        Log.d("VOL_NAMES_", "/" + name[1] + "/" + name[2] + "/" + name[3]);
         File storageDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        Log.d("Path######", storageDirectory.toString());
-        File dir = new File(storageDirectory.getAbsolutePath() + "/Fun Gallery/");
+        Log.d("VOL_NAMES_", storageDirectory.toString());
+        File dir = new File(path + "/Fun Gallery/");
+
+        Log.d("VOL_NAMES_", dir.getAbsolutePath());
+
         if (!dir.exists())
             dir.mkdirs();
         // creating and saving image file to Fun gallery folder
@@ -368,4 +404,64 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void createImage() {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+//                .addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_TITLE, "Fun gallery/file1.jpg");
+        startActivityForResult(intent, CREATE_IMAGE);
+
+    }
+
+    // to notify storage that new file is created/ added
+    public void scanFile(Context ctxt, File f, String mimeType) {
+        MediaScannerConnection
+                .scanFile(ctxt, new String[]{f.getAbsolutePath()},
+                        new String[]{mimeType}, null);
+    }
+
+    private Uri saveImage() {
+        ContentResolver contentResolver = getContentResolver();
+        String imageFilename = String.valueOf(System.currentTimeMillis());
+
+        Uri imageCollection;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            imageCollection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        } else {
+            imageCollection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        }
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, imageFilename + ".jpg");
+        /**
+         * if you use VOLUME_EXTERNAL_PRIMARY
+         * Pictures/ or DCIM/ only
+         *contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/"+"My Custom Directory");
+         */
+        contentValues.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/" + "Fun Zone/");
+        Uri uri = contentResolver.insert(imageCollection, contentValues);
+        File imgFile = new File(String.valueOf(uri));
+        Log.d("SAVED_IMAGE", uri.toString());
+        Log.d("SAVED_IMAGE", imgFile.getAbsolutePath());
+        Log.d("SAVED_IMAGE", imageCollection.toString());
+        currentPhotoPath = String.valueOf(uri);
+        return uri;
+    }
+
+    private void deleteCacheImage(Uri uri) throws IntentSender.SendIntentException {
+        // Remove a specific media item.
+        ContentResolver resolver = getContentResolver();
+
+        // URI of the image to remove.
+        Uri imageUri = Uri.parse(currentPhotoPath);
+
+        // WHERE clause.
+        String selection = "...";
+        String[] selectionArgs = null;
+
+        // Perform the actual removal.
+        int numImagesRemoved = resolver.delete(
+                imageUri,
+                null,
+                null);
+    }
 }
