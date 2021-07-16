@@ -284,16 +284,18 @@ public class MainActivity extends AppCompatActivity {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-//            createImage();
+            // Intent saving 
+            //createImage();
 
             // Create the File where the photo should go
             File photoFile = null;
-            //                photoFile = createImageFile();
-//            photoFile = new File(currentPhotoPath);
-//            Log.d("PHOTO_FILE", photoFile.toString());
+            //API > 29
+            //photoFile = createImageFile();
+            //photoFile = new File(currentPhotoPath);
+            //Log.d("PHOTO_FILE", photoFile.toString());
             // Continue only if the File was successfully created
-//            if (photoFile != null) {
-//                scanFile(this, new File(currentPhotoPath), "image/*");
+            //if (photoFile != null) {
+            //scanFile(this, new File(currentPhotoPath), "image/*");
             Uri photoURI = saveImage();
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
             startActivityForResult(takePictureIntent, TAKE_PHOTO);
@@ -318,7 +320,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (fileSize == 0) {
-////                new File(currentPhotoPath).delete();
                 try {
                     deleteCacheImage(Uri.parse(currentPhotoPath));
                 } catch (IntentSender.SendIntentException e) {
@@ -365,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // saving picture
+    // saving picture API < 29
     private File createImageFile() throws IOException {
         // Create an Image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -404,11 +405,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    // save image by Intent parsing
     private void createImage() {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
 //                .addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "Fun gallery/file1.jpg");
+        intent.putExtra(Intent.EXTRA_TITLE, "file1.jpg");
         startActivityForResult(intent, CREATE_IMAGE);
 
     }
@@ -420,6 +422,7 @@ public class MainActivity extends AppCompatActivity {
                         new String[]{mimeType}, null);
     }
 
+    // save image for API <= 29
     private Uri saveImage() {
         ContentResolver contentResolver = getContentResolver();
         String imageFilename = String.valueOf(System.currentTimeMillis());
